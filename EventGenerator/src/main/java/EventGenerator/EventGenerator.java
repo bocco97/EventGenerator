@@ -52,12 +52,13 @@ public class EventGenerator {
         return l;
     }
 
+    //creates a Kafka producer for the given bootstrap server
     private static KafkaProducer<String, String> createKafkaProducer(String server){
         Properties properties = new Properties();
         properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,server);
         properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,StringSerializer.class.getName());
-        return new KafkaProducer<String, String>(properties);
+        return new KafkaProducer<>(properties);
     }
 
     public static void main(String[] args) {
@@ -129,6 +130,7 @@ public class EventGenerator {
             String event = "lat: " + lat + "\t\tlon: " + lon + "\t\tmass: " + mass + "\t\trecclass: " + type + "\t\t\tdate: " + date;
 
             ProducerRecord<String,String> record = new ProducerRecord<>(KAFKA_TOPIC,event);
+            //producer.send(record);
             producer.send(record, new Callback() {
                 @Override
                 public void onCompletion(RecordMetadata recordMetadata, Exception e) {
@@ -136,7 +138,8 @@ public class EventGenerator {
                         System.out.println("Correctly sent event: "+event);
                     }
                     else{
-                        System.out.println("Error sending "+event);
+                        e.printStackTrace();
+                        //System.out.println("Error sending "+event);
                     }
                 }
             });
