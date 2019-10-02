@@ -2,6 +2,7 @@ package EventGenerator;
 
 import org.apache.kafka.clients.producer.*;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.json.simple.JSONObject;
 
 import java.io.*;
 import java.nio.file.Paths;
@@ -120,31 +121,34 @@ public class EventGenerator {
         }
 
         KafkaProducer<String,String> producer = createKafkaProducer(KAFKA_SERVER);
-
+        int id = 1;
         while(true){
             String lat = randomGeographicValue();
             String lon = randomGeographicValue();
             int mass = rand.nextInt(200000);
             String type = randomPick(keys);
             String date = java.time.LocalDateTime.now().toString();
-            String event = "lat: " + lat + "\t\tlon: " + lon + "\t\tmass: " + mass + "\t\trecclass: " + type + "\t\t\tdate: " + date;
+            JSONObject evt = new JSONObject();
+            evt.put("reclong",lon);
+            evt.put("reclat",lat);
+            evt.put("fall","Fell");
+            evt.put("year",date);
+            evt.put("mass",mass);
+            evt.put("recclass",type);
+            evt.put("id",id++);
+            ProducerRecord<String,String> record = new ProducerRecord<>(KAFKA_TOPIC,evt.toString());
 
-            ProducerRecord<String,String> record = new ProducerRecord<>(KAFKA_TOPIC,event);
-            //producer.send(record);
             producer.send(record, new Callback() {
                 @Override
                 public void onCompletion(RecordMetadata recordMetadata, Exception e) {
                     if (e==null){
-                        System.out.println("Correctly sent event: "+event);
+                        System.out.println("Correctly sent event: "+evt);
                     }
                     else{
                         e.printStackTrace();
-                        //System.out.println("Error sending "+event);
                     }
                 }
             });
-            //System.out.println(event);
-
             try {
                 sleep(INTERVAL);
             }
